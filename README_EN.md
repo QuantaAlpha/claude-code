@@ -1,12 +1,23 @@
+<div align="center">
+
 # Claude Code
 
-> Anthropic's Official AI Coding Assistant CLI — Source Research Edition
+**Anthropic's Official AI Coding Assistant CLI — Source Research Edition**
 
-Claude Code is a terminal-based AI coding assistant deeply integrated with Claude models. It supports code writing, debugging, refactoring, code review, multi-agent collaboration, and other complex engineering tasks. This repository is a snapshot of the core source code, containing 1,903 TypeScript files and approximately 512,000 lines of code.
+![TypeScript](https://img.shields.io/badge/TypeScript-strict_mode-3178c6?logo=typescript&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-v1.3.5+-fbf0df?logo=bun&logoColor=black)
+![Files](https://img.shields.io/badge/source_files-1%2C903-blueviolet)
+![Lines](https://img.shields.io/badge/lines_of_code-512%2C000%2B-orange)
 
-![Claude Code running — bun install + bun run dev starts successfully](docs/cli-startup.jpg)
+Claude Code is a terminal-based AI coding assistant deeply integrated with Claude models. It supports code writing, debugging, refactoring, code review, multi-agent collaboration, and other complex engineering tasks. This repository is a snapshot of the core source code.
 
-> Above: After running `bun install` to install stub dependencies, `bun run dev` launches Claude Code v999.0.0-restored directly from source, entering the interactive REPL.
+<br/>
+
+<img src="docs/cli-startup.jpg" alt="Claude Code running: bun install + bun run dev starts successfully" width="720"/>
+
+*After `bun install`, `bun run dev` launches Claude Code directly from source into the interactive REPL*
+
+</div>
 
 ---
 

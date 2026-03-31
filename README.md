@@ -1,12 +1,23 @@
+<div align="center">
+
 # Claude Code
 
-> Anthropic 官方 AI 编程助手 CLI 工具 — 源码研究版本
+**Anthropic 官方 AI 编程助手 CLI 工具 — 源码研究版本**
 
-Claude Code 是一款运行在终端中的 AI 编程助手，深度集成 Claude 模型，支持代码编写、调试、重构、代码审查、多代理协作等复杂工程任务。本仓库为其核心源码快照，包含 1,903 个 TypeScript 文件、约 512,000 行代码。
+![TypeScript](https://img.shields.io/badge/TypeScript-严格模式-3178c6?logo=typescript&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-v1.3.5+-fbf0df?logo=bun&logoColor=black)
+![Files](https://img.shields.io/badge/源文件-1%2C903-blueviolet)
+![Lines](https://img.shields.io/badge/代码行数-512%2C000%2B-orange)
 
-![Claude Code 运行截图 — bun install + bun run dev 成功启动](docs/cli-startup.jpg)
+Claude Code 是一款运行在终端中的 AI 编程助手，深度集成 Claude 模型，支持代码编写、调试、重构、代码审查、多代理协作等复杂工程任务。本仓库为其核心源码快照。
 
-> 上图：执行 `bun install` 安装桩依赖后，`bun run dev` 直接从源码启动 Claude Code v999.0.0-restored，进入交互式 REPL。
+<br/>
+
+<img src="docs/cli-startup.jpg" alt="Claude Code 运行截图：bun install + bun run dev 成功启动" width="720"/>
+
+*执行 `bun install` 后，`bun run dev` 直接从源码启动 Claude Code，进入交互式 REPL*
+
+</div>
 
 ---
 
