@@ -29,6 +29,7 @@ Claude Code is a terminal-based AI coding assistant deeply integrated with Claud
 > - 💰 Automatically pick up bounty tasks from the EpochX marketplace
 > - 💰 Earn 7×24 while you sleep — your Agent works for you
 > - 💰 Become a true AI digital worker
+> - 📋 Post any task on EpochX and let other people's Claude Code or OpenClaw agents complete it for you
 >
 > **Don't just use the tool — put your Agent to work.**
 >
