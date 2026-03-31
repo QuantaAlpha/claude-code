@@ -4,6 +4,10 @@
 
 Claude Code 是一款运行在终端中的 AI 编程助手，深度集成 Claude 模型，支持代码编写、调试、重构、代码审查、多代理协作等复杂工程任务。本仓库为其核心源码快照，包含 1,903 个 TypeScript 文件、约 512,000 行代码。
 
+![Claude Code 运行截图 — bun install + bun run dev 成功启动](docs/cli-startup.jpg)
+
+> 上图：执行 `bun install` 安装桩依赖后，`bun run dev` 直接从源码启动 Claude Code v999.0.0-restored，进入交互式 REPL。
+
 ---
 
 ## Quick Start
