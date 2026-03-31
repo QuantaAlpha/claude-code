@@ -2,95 +2,111 @@
 
 # Claude Code
 
-**Anthropic 官方 AI 编程助手 CLI 工具 — 源码研究版本**
+**Anthropic's Official AI Coding Assistant CLI — Source Research Edition**
 
-![TypeScript](https://img.shields.io/badge/TypeScript-严格模式-3178c6?logo=typescript&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict_mode-3178c6?logo=typescript&logoColor=white)
 ![Bun](https://img.shields.io/badge/Bun-v1.3.5+-fbf0df?logo=bun&logoColor=black)
-![Files](https://img.shields.io/badge/源文件-1%2C903-blueviolet)
-![Lines](https://img.shields.io/badge/代码行数-512%2C000%2B-orange)
+![Files](https://img.shields.io/badge/source_files-1%2C903-blueviolet)
+![Lines](https://img.shields.io/badge/lines_of_code-512%2C000%2B-orange)
 
-Claude Code 是一款运行在终端中的 AI 编程助手，深度集成 Claude 模型，支持代码编写、调试、重构、代码审查、多代理协作等复杂工程任务。本仓库为其核心源码快照。
+Claude Code is a terminal-based AI coding assistant deeply integrated with Claude models. It supports code writing, debugging, refactoring, code review, multi-agent collaboration, and other complex engineering tasks. This repository is a snapshot of the core source code.
 
 <br/>
 
-<img src="assets/cli-preview.jpg" alt="Claude Code 运行截图：bun install + bun run dev 成功启动" width="720"/>
+<img src="assets/cli-preview.jpg" alt="Claude Code running: bun install + bun run dev starts successfully" width="720"/>
 
-*执行 `bun install` 后，`bun run dev` 直接从源码启动 Claude Code，进入交互式 REPL*
+*After `bun install`, `bun run dev` launches Claude Code directly from source into the interactive REPL*
 
 </div>
 
 ---
 
+> **✨ Ready-to-use fork by [@QuantaAlpha](https://quantaalpha.com)**
+>
+> We've patched this source snapshot into a **zero-config, out-of-the-box CLI** — just `bun install` and go.
+> Fully integrated with the **[EpochX](https://epochx.cc) Agent community platform**, so your Claude Code can do more than assist with coding:
+>
+> - 💰 Automatically pick up bounty tasks from the EpochX marketplace
+> - 💰 Earn 7×24 while you sleep — your Agent works for you
+> - 💰 Become a true AI digital worker
+>
+> **Don't just use the tool — put your Agent to work.**
+>
+> 👉 Drop-in fork: **[github.com/QuantaAlpha/claude-code](https://github.com/QuantaAlpha/claude-code)**
+> 🌐 Learn more: **[quantaalpha.com](https://quantaalpha.com)** · **[epochx.cc](https://epochx.cc)**
+
+---
+
 ## Quick Start
 
-### 前置要求
+### Prerequisites
 
-- [Bun](https://bun.sh) **v1.3.5+**（`bun --version` 确认；如需升级：`bun upgrade`）
-- `ANTHROPIC_API_KEY` 环境变量（运行交互模式时必须）
+- [Bun](https://bun.sh) **v1.3.5+** (verify with `bun --version`; upgrade with `bun upgrade`)
+- `ANTHROPIC_API_KEY` environment variable (required for interactive mode)
 
-### 安装
+### Installation
 
 ```bash
-# 克隆仓库后，在项目根目录执行：
+# After cloning the repo, run in the project root:
 bun install
 ```
 
-### 启动
+### Launch
 
 ```bash
-# 方式 1：通过 npm script（推荐）
+# Option 1: Via npm script (recommended)
 bun run dev
 
-# 方式 2：直接运行入口文件（等价）
+# Option 2: Run the entry file directly (equivalent)
 bun run src/dev-entry.ts
 
-# 方式 3：可执行脚本（根目录）
+# Option 3: Executable script (root directory)
 ./claude-dev
 ```
 
-### 常用命令
+### Common Commands
 
 ```bash
-# 查看版本
+# Show version
 bun run dev --version
 
-# 查看帮助
+# Show help
 bun run dev --help
 
-# 交互式 REPL（需要 ANTHROPIC_API_KEY）
+# Interactive REPL (requires ANTHROPIC_API_KEY)
 export ANTHROPIC_API_KEY=your_key_here
 bun run dev
 
-# 非交互打印模式（单次对话后退出）
-bun run dev --print "帮我写一个冒泡排序"
+# Non-interactive print mode (single conversation then exit)
+bun run dev --print "Write a bubble sort for me"
 
-# 指定工作目录运行
+# Run with a specific working directory
 bun run dev --add-dir /path/to/project
 ```
 
 ---
 
-## 运行逻辑
+## How It Works
 
-### 启动入口链路
+### Startup Entry Chain
 
 ```
-claude-dev  (可执行脚本，根目录)
+claude-dev  (executable script, root directory)
   └── bun run src/dev-entry.ts
-        └── src/entrypoints/cli.tsx   ← 真正的 CLI 入口
-              └── main()              ← Commander.js 命令解析 + 路由
-                    ├── --version / --help / --print → 直接处理
-                    └── 交互模式 → launchRepl() → screens/REPL.tsx
+        └── src/entrypoints/cli.tsx   ← actual CLI entry
+              └── main()              ← Commander.js command parsing + routing
+                    ├── --version / --help / --print → handled directly
+                    └── interactive mode → launchRepl() → screens/REPL.tsx
 ```
 
-#### 为什么需要 `dev-entry.ts`？
+#### Why is `dev-entry.ts` needed?
 
-`src/entrypoints/cli.tsx` 使用了 Bun 打包专用 API `bun:bundle`（用于编译时特性标志 / 死代码消除），无法直接用 `bun run` 解释执行。`dev-entry.ts` 在运行时通过 `globalThis.MACRO` 模拟打包时注入的常量，使源码可以不经构建直接运行：
+`src/entrypoints/cli.tsx` uses the Bun bundler-specific API `bun:bundle` (for compile-time feature flags / dead code elimination), which cannot be interpreted directly by `bun run`. `dev-entry.ts` simulates constants injected at bundle time via `globalThis.MACRO`, allowing the source code to run without a build step:
 
 ```typescript
-// dev-entry.ts 做了两件关键事：
+// dev-entry.ts does two key things:
 
-// 1. 注入打包时常量（替代 bun build 在编译期注入的值）
+// 1. Inject bundle-time constants (replacing values bun build injects at compile time)
 globalThis.MACRO = {
   VERSION: pkg.version,
   BUILD_TIME: '',
@@ -98,91 +114,91 @@ globalThis.MACRO = {
   // ...
 }
 
-// 2. 验证所有相对 import 可解析后，动态导入真正入口
+// 2. After validating all relative imports are resolvable, dynamically import the real entry
 await import('./entrypoints/cli.tsx')
 ```
 
-### Shims（桩模块）说明
+### Shims Explained
 
-部分 Anthropic 内部包未公开发布，由 `stubs/` 目录下的桩模块替代：
+Some Anthropic-internal packages are not publicly published and are replaced by stub modules in the `stubs/` directory:
 
-| 包名 | 位置 | 说明 |
-|------|------|------|
-| `@ant/computer-use-mcp` | `stubs/ant-computer-use-mcp` | macOS 屏幕控制（截图 / 鼠标 / 键盘） |
-| `@ant/computer-use-input` | `stubs/ant-computer-use-input` | 底层输入设备控制（Rust/enigo） |
-| `@ant/computer-use-swift` | `stubs/ant-computer-use-swift` | macOS Swift 原生截图 API |
-| `@ant/claude-for-chrome-mcp` | `stubs/ant-claude-for-chrome-mcp` | Chrome 浏览器控制 MCP 服务 |
-| `color-diff-napi` | `stubs/color-diff-napi` | 语法高亮 diff 渲染（Native Addon） |
-| `modifiers-napi` | `stubs/modifiers-napi` | 键盘修饰键状态检测 |
-| `url-handler-napi` | `stubs/url-handler-napi` | macOS URL scheme 注册 |
+| Package | Location | Description |
+|---------|----------|-------------|
+| `@ant/computer-use-mcp` | `stubs/ant-computer-use-mcp` | macOS screen control (screenshot / mouse / keyboard) |
+| `@ant/computer-use-input` | `stubs/ant-computer-use-input` | Low-level input device control (Rust/enigo) |
+| `@ant/computer-use-swift` | `stubs/ant-computer-use-swift` | macOS Swift native screenshot API |
+| `@ant/claude-for-chrome-mcp` | `stubs/ant-claude-for-chrome-mcp` | Chrome browser control MCP service |
+| `color-diff-napi` | `stubs/color-diff-napi` | Syntax highlight diff rendering (Native Addon) |
+| `modifiers-napi` | `stubs/modifiers-napi` | Keyboard modifier key state detection |
+| `url-handler-napi` | `stubs/url-handler-napi` | macOS URL scheme registration |
 
-这些 shim 均为空实现或返回默认值，不影响核心 AI 对话和代码操作能力。
+These shims are empty implementations or return default values and do not affect core AI conversation and code operation capabilities.
 
-### 特性标志（`bun:bundle` 编译时决策）
+### Feature Flags (`bun:bundle` compile-time decisions)
 
-生产包通过 `bun:bundle` 的 `feature()` 宏在**打包阶段**决定是否包含某段代码。在开发模式（`dev-entry.ts` 启动）下，所有 `feature()` 调用返回 `false`，即所有实验性特性默认关闭，只保留核心功能路径。
+The production bundle uses `bun:bundle`'s `feature()` macro to decide whether to include certain code **at bundle time**. In development mode (launched via `dev-entry.ts`), all `feature()` calls return `false`, meaning all experimental features are disabled by default, keeping only the core functionality paths.
 
 ```typescript
-// 示例：仅在生产包中激活特定特性
+// Example: activate a specific feature only in the production bundle
 if (feature('KAIROS')) {
-  // 高级助手模式代码 — 开发模式下此分支被跳过
+  // Advanced assistant mode code — this branch is skipped in dev mode
 }
 ```
 
-### 关键源文件
+### Key Source Files
 
-| 文件 | 说明 |
-|------|------|
-| `src/dev-entry.ts` | 开发启动入口，注入 MACRO 常量并校验依赖完整性 |
-| `src/entrypoints/cli.tsx` | CLI bootstrap，处理快速路径（--version 等）和模式路由 |
-| `src/main.tsx` | 主应用逻辑：Commander 命令树、REPL 启动、会话初始化 |
-| `src/query.ts` | LLM 查询处理主循环 |
-| `src/QueryEngine.ts` | 查询引擎核心，管理 API 调用和工具编排 |
-
----
-
-## 目录
-
-- [架构总览](#架构总览)
-- [目录结构](#目录结构)
-- [核心概念](#核心概念)
-  - [查询引擎](#查询引擎)
-  - [工具系统](#工具系统)
-  - [命令系统](#命令系统)
-  - [Hooks 机制](#hooks-机制)
-  - [权限系统](#权限系统)
-  - [任务系统](#任务系统)
-  - [MCP 集成](#mcp-集成)
-- [技术栈](#技术栈)
-- [特性标志系统](#特性标志系统)
-- [关键数据流](#关键数据流)
-- [主要模块说明](#主要模块说明)
-- [环境变量参考](#环境变量参考)
+| File | Description |
+|------|-------------|
+| `src/dev-entry.ts` | Development startup entry, injects MACRO constants and validates dependency completeness |
+| `src/entrypoints/cli.tsx` | CLI bootstrap, handles fast paths (--version etc.) and mode routing |
+| `src/main.tsx` | Main application logic: Commander command tree, REPL startup, session initialization |
+| `src/query.ts` | LLM query processing main loop |
+| `src/QueryEngine.ts` | Query engine core, manages API calls and tool orchestration |
 
 ---
 
-## 架构总览
+## Table of Contents
+
+- [Architecture Overview](#architecture-overview)
+- [Directory Structure](#directory-structure)
+- [Core Concepts](#core-concepts)
+  - [Query Engine](#query-engine)
+  - [Tool System](#tool-system)
+  - [Command System](#command-system)
+  - [Hooks Mechanism](#hooks-mechanism)
+  - [Permission System](#permission-system)
+  - [Task System](#task-system)
+  - [MCP Integration](#mcp-integration)
+- [Tech Stack](#tech-stack)
+- [Feature Flag System](#feature-flag-system)
+- [Key Data Flows](#key-data-flows)
+- [Module Reference](#module-reference)
+- [Environment Variables](#environment-variables)
+
+---
+
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                      入口层                              │
+│                      Entry Layer                         │
 │  entrypoints/cli.tsx   entrypoints/init.ts   setup.ts  │
 └───────────────────────────┬─────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────┐
-│                    主应用循环 (main.tsx)                  │
-│          命令解析 → 消息处理 → 用户交互管理               │
+│                  Main App Loop (main.tsx)                │
+│       Command Parsing → Message Handling → UI Mgmt       │
 └──────────┬──────────────────────────┬────────────────────┘
            │                          │
 ┌──────────▼──────────┐  ┌────────────▼────────────────────┐
-│    命令系统          │  │         查询引擎                  │
+│   Command System     │  │         Query Engine             │
 │  commands/ (103+)   │  │  query.ts + QueryEngine.ts       │
 │  PromptCommand      │  │  ↕ services/api/claude.ts        │
 │  LocalCommand       │  │        (Anthropic SDK)           │
 └─────────────────────┘  └─────────────┬───────────────────┘
                                        │
                           ┌────────────▼────────────────────┐
-                          │         工具执行层               │
+                          │       Tool Execution Layer       │
                           │  tools/ (44+) + toolHooks.ts    │
                           │  PreToolUse → call → PostToolUse│
                           └─────────────┬───────────────────┘
@@ -190,35 +206,35 @@ if (feature('KAIROS')) {
            ┌───────────────────────────┼───────────────────────┐
            │                           │                       │
 ┌──────────▼──────┐      ┌─────────────▼──────┐   ┌───────────▼──────┐
-│   权限控制层     │      │    状态管理层        │   │    UI 渲染层      │
+│ Permission Layer │      │   State Layer        │   │   UI Layer       │
 │ useCanUseTool   │      │  AppState (Zustand)  │   │  React + Ink     │
 │ permissions/    │      │  context/            │   │  components/     │
 └─────────────────┘      └────────────────────┘   └──────────────────┘
            │
 ┌──────────▼──────────────────────────────────────────────────────────┐
-│                          支撑服务层                                   │
-│  MCP集成 | OAuth认证 | LSP支持 | 上下文压缩 | 分析追踪 | 插件系统     │
+│                          Support Services                            │
+│  MCP Integration | OAuth | LSP | Context Compression | Analytics    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 目录结构
+## Directory Structure
 
 ```
 src/
-├── entrypoints/          # 多个应用入口
-│   ├── cli.tsx           # CLI 主入口，处理 --version、--dump-system-prompt 等
-│   └── init.ts           # 初始化：Node 版本检查、Session 管理、Worktree 支持
-├── main.tsx              # 应用主循环 (4,683 行)
-├── setup.ts              # 启动配置：权限模式、Tmux 集成、日志初始化
-├── query.ts              # 查询处理主逻辑 (1,729 行)
-├── QueryEngine.ts        # 查询引擎核心 (1,295 行)
-├── Tool.ts               # 工具类型定义和接口 (792 行)
-├── commands.ts           # 命令注册表 (100+ 命令)
-├── context.ts            # Git 状态和系统上下文管理
+├── entrypoints/          # Multiple application entry points
+│   ├── cli.tsx           # CLI main entry, handles --version, --dump-system-prompt, etc.
+│   └── init.ts           # Initialization: Node version check, Session management, Worktree support
+├── main.tsx              # Application main loop (4,683 lines)
+├── setup.ts              # Startup config: permission modes, Tmux integration, logging init
+├── query.ts              # Query processing main logic (1,729 lines)
+├── QueryEngine.ts        # Query engine core (1,295 lines)
+├── Tool.ts               # Tool type definitions and interfaces (792 lines)
+├── commands.ts           # Command registry (100+ commands)
+├── context.ts            # Git status and system context management
 │
-├── tools/                # 44+ 工具实现
+├── tools/                # 44+ tool implementations
 │   ├── BashTool/
 │   ├── FileEditTool/
 │   ├── FileReadTool/
@@ -233,9 +249,9 @@ src/
 │   ├── TaskCreateTool/
 │   ├── EnterPlanModeTool/
 │   ├── NotebookEditTool/
-│   └── ... (更多工具)
+│   └── ... (more tools)
 │
-├── commands/             # 103+ 命令实现
+├── commands/             # 103+ command implementations
 │   ├── commit/
 │   ├── review/
 │   ├── config/
@@ -243,73 +259,73 @@ src/
 │   ├── skills/
 │   ├── memory/
 │   ├── tasks/
-│   └── ... (更多命令)
+│   └── ... (more commands)
 │
-├── services/             # 38+ 服务
-│   ├── api/              # Anthropic API 客户端 (22 个子模块)
-│   │   ├── claude.ts     # API 调用、流式处理、重试逻辑
+├── services/             # 38+ services
+│   ├── api/              # Anthropic API client (22 sub-modules)
+│   │   ├── claude.ts     # API calls, streaming, retry logic
 │   │   └── errors.ts
-│   ├── tools/            # 工具执行编排
+│   ├── tools/            # Tool execution orchestration
 │   │   ├── toolOrchestration.ts
 │   │   ├── toolExecution.ts
 │   │   └── StreamingToolExecutor.ts
-│   ├── mcp/              # MCP 服务器管理 (25 个子模块)
-│   ├── compact/          # 上下文自动压缩
-│   ├── analytics/        # 分析追踪
+│   ├── mcp/              # MCP server management (25 sub-modules)
+│   ├── compact/          # Automatic context compression
+│   ├── analytics/        # Analytics tracking
 │   ├── lsp/              # Language Server Protocol
-│   ├── oauth/            # OAuth 2.0 认证
+│   ├── oauth/            # OAuth 2.0 authentication
 │   └── ...
 │
-├── state/                # 应用状态管理
-│   ├── AppState.tsx      # React 状态定义
-│   ├── AppStateStore.ts  # 状态存储
-│   └── store.ts          # Zustand store 实现
+├── state/                # Application state management
+│   ├── AppState.tsx      # React state definitions
+│   ├── AppStateStore.ts  # State store
+│   └── store.ts          # Zustand store implementation
 │
 ├── hooks/                # 87+ React Hooks
-│   ├── useCanUseTool.ts  # 工具权限检查
-│   ├── useTasksV2.ts     # 任务管理
+│   ├── useCanUseTool.ts  # Tool permission checks
+│   ├── useTasksV2.ts     # Task management
 │   ├── useQueueProcessor.ts
-│   ├── useVoice.ts       # 语音集成
+│   ├── useVoice.ts       # Voice integration
 │   └── ...
 │
-├── components/           # 146+ React 组件
-├── ink/                  # 终端 UI 渲染层 (50 文件)
-├── types/                # TypeScript 类型定义
+├── components/           # 146+ React components
+├── ink/                  # Terminal UI rendering layer (50 files)
+├── types/                # TypeScript type definitions
 │   ├── message.ts
 │   ├── command.ts
 │   ├── hooks.ts
 │   └── permissions.ts
 │
-├── utils/                # 298+ 工具函数模块
+├── utils/                # 298+ utility function modules
 │   ├── config.ts
 │   ├── permissions/
 │   ├── model/
-│   ├── bash/             # Bash 解析器 (bashParser.ts 4,436 行)
+│   ├── bash/             # Bash parser (bashParser.ts 4,436 lines)
 │   └── ...
 │
-├── bootstrap/            # 启动状态初始化
-├── tasks/                # 任务系统实现
-├── skills/               # 技能系统
-├── plugins/              # 插件系统
-├── bridge/               # Bridge 通信 (33 文件)
-├── coordinator/          # 多代理协调
-├── memdir/               # 内存目录管理
-├── migrations/           # 数据迁移
-├── remote/               # 远程操作
-├── schemas/              # 数据 Schema
-├── vim/                  # Vim 模式支持
-└── keybindings/          # 键盘快捷键配置
+├── bootstrap/            # Startup state initialization
+├── tasks/                # Task system implementation
+├── skills/               # Skills system
+├── plugins/              # Plugin system
+├── bridge/               # Bridge communication (33 files)
+├── coordinator/          # Multi-agent coordination
+├── memdir/               # Memory directory management
+├── migrations/           # Data migrations
+├── remote/               # Remote operations
+├── schemas/              # Data schemas
+├── vim/                  # Vim mode support
+└── keybindings/          # Keyboard shortcut configuration
 ```
 
 ---
 
-## 核心概念
+## Core Concepts
 
-### 查询引擎
+### Query Engine
 
-查询引擎是整个系统的核心，负责与 Claude API 交互并编排工具调用。
+The query engine is the heart of the system, responsible for interacting with the Claude API and orchestrating tool calls.
 
-**主要入口**：`src/query.ts` + `src/QueryEngine.ts`
+**Main entries**: `src/query.ts` + `src/QueryEngine.ts`
 
 ```typescript
 export type QueryEngineConfig = {
@@ -328,79 +344,79 @@ export type QueryEngineConfig = {
 }
 ```
 
-**执行流程**：
+**Execution flow**:
 
 ```
-用户输入
+User input
   ↓
-消息正规化 (normalizeMessagesForAPI)
+Message normalization (normalizeMessagesForAPI)
   ↓
-系统提示准备 (getSystemPrompt)
+System prompt preparation (getSystemPrompt)
   ↓
-API 调用 (services/api/claude.ts)  — 流式响应
+API call (services/api/claude.ts)  — streaming response
   ↓
-工具调用处理 (runTools)
-  ├── 并发安全工具 → 并发执行
-  └── 破坏性工具 → 串行执行
+Tool call handling (runTools)
+  ├── Concurrency-safe tools → parallel execution
+  └── Destructive tools → serial execution
   ↓
-结果聚合 → 继续对话 or 结束
+Result aggregation → continue conversation or end
 ```
 
 ---
 
-### 工具系统
+### Tool System
 
-工具是 Claude 与外部系统交互的基本单元。
+Tools are the basic units through which Claude interacts with external systems.
 
-**工具接口定义** (`src/Tool.ts`):
+**Tool interface definition** (`src/Tool.ts`):
 
 ```typescript
 export type Tool<Input, Output, P extends ToolProgressData> = {
   name: string
   aliases?: string[]
   
-  // 核心执行方法
+  // Core execution method
   call(args: z.infer<Input>, context: ToolUseContext, canUseTool: CanUseToolFn): Promise<ToolResult<Output>>
   
-  // 并发和只读性声明
+  // Concurrency and read-only declarations
   isConcurrencySafe(input: z.infer<Input>): boolean
   isReadOnly(input: z.infer<Input>): boolean
   isDestructive?(input: z.infer<Input>): boolean
   
-  // 输入验证 schema
+  // Input validation schema
   readonly inputSchema: Input
 }
 ```
 
-**内置工具列表**：
+**Built-in tool list**:
 
-| 类别 | 工具 |
-|------|------|
-| 文件操作 | FileReadTool, FileWriteTool, FileEditTool, GlobTool, GrepTool, NotebookEditTool |
-| 命令执行 | BashTool, PowerShellTool, REPLTool (ant-only) |
-| 网络 | WebFetchTool, WebSearchTool |
-| AI/代理 | AgentTool, SkillTool, SendMessageTool |
-| 任务管理 | TaskCreateTool, TaskUpdateTool, TaskListTool, TaskGetTool, TaskStopTool, TaskOutputTool |
-| 模式控制 | EnterPlanModeTool, ExitPlanModeTool, EnterWorktreeTool, ExitWorktreeTool |
+| Category | Tools |
+|----------|-------|
+| File operations | FileReadTool, FileWriteTool, FileEditTool, GlobTool, GrepTool, NotebookEditTool |
+| Command execution | BashTool, PowerShellTool, REPLTool (ant-only) |
+| Network | WebFetchTool, WebSearchTool |
+| AI / Agents | AgentTool, SkillTool, SendMessageTool |
+| Task management | TaskCreateTool, TaskUpdateTool, TaskListTool, TaskGetTool, TaskStopTool, TaskOutputTool |
+| Mode control | EnterPlanModeTool, ExitPlanModeTool, EnterWorktreeTool, ExitWorktreeTool |
 | MCP | MCPTool, ListMcpResourcesTool, ReadMcpResourceTool, McpAuthTool |
-| 调度 | ScheduleCronTool, RemoteTriggerTool |
-| 其他 | TodoWriteTool, ToolSearchTool, AskUserQuestionTool, SleepTool |
+| Scheduling | ScheduleCronTool, RemoteTriggerTool |
+| Other | TodoWriteTool, ToolSearchTool, AskUserQuestionTool, SleepTool |
 
 ---
 
-### 命令系统
+### Command System
 
-命令分为两种类型：
+Commands come in two types:
 
 ```typescript
-// 本地命令 — 直接执行，不走 LLM
+// Local command — executed directly, bypasses LLM
 type LocalCommand = {
   type: 'local'
   supportsNonInteractive: boolean
   load: () => Promise<LocalCommandModule>
 }
 
-// 提示命令 — 生成系统提示注入查询引擎
+// Prompt command — generates a system prompt injected into the query engine
 type PromptCommand = {
   type: 'prompt'
   progressMessage: string
@@ -411,259 +427,259 @@ type PromptCommand = {
 }
 ```
 
-**常用命令**：
+**Common commands**:
 
-| 类别 | 命令 |
-|------|------|
-| Git 工作流 | commit, diff, review, branch, pr_comments |
-| 配置管理 | config, model, permissions, keybindings, theme |
-| 会话管理 | clear, compact, resume, export, copy |
-| 代码分析 | cost, context, files, stats |
-| 工具管理 | mcp, skills, plugins, memory |
-| 任务管理 | tasks, agent, session |
-| 账户 | login, logout, usage, upgrade |
-| 调试 | doctor, debug-tool-call, heapdump, perf-issue |
-| 其他 | help, version, vim, voice, init |
+| Category | Commands |
+|----------|----------|
+| Git workflow | commit, diff, review, branch, pr_comments |
+| Configuration | config, model, permissions, keybindings, theme |
+| Session management | clear, compact, resume, export, copy |
+| Code analysis | cost, context, files, stats |
+| Tool management | mcp, skills, plugins, memory |
+| Task management | tasks, agent, session |
+| Account | login, logout, usage, upgrade |
+| Debugging | doctor, debug-tool-call, heapdump, perf-issue |
+| Other | help, version, vim, voice, init |
 
 ---
 
-### Hooks 机制
+### Hooks Mechanism
 
-Hooks 允许在工具调用的各个生命周期节点注入自定义逻辑。
+Hooks allow injecting custom logic at various lifecycle points of tool calls.
 
-**Hook 事件类型**：
+**Hook event types**:
 
-| 事件 | 触发时机 |
-|------|----------|
-| `PreToolUse` | 工具调用前，可修改输入参数 |
-| `PostToolUse` | 工具调用成功后 |
-| `PostToolUseFailure` | 工具执行失败后 |
-| `UserPromptSubmit` | 用户提交消息时 |
-| `SessionStart` | 会话开始时 |
-| `Setup` | 应用初始化时 |
-| `PermissionDenied` | 权限被拒绝时 |
-| `Notification` | 通知事件 |
-| `SubagentStart` | 子代理启动时 |
-| `PreCompact` / `PostCompact` | 上下文压缩前后 |
+| Event | When triggered |
+|-------|----------------|
+| `PreToolUse` | Before a tool call; can modify input parameters |
+| `PostToolUse` | After a tool call succeeds |
+| `PostToolUseFailure` | After a tool execution fails |
+| `UserPromptSubmit` | When the user submits a message |
+| `SessionStart` | When a session starts |
+| `Setup` | During application initialization |
+| `PermissionDenied` | When permission is denied |
+| `Notification` | On notification events |
+| `SubagentStart` | When a sub-agent starts |
+| `PreCompact` / `PostCompact` | Before/after context compression |
 
-**Hook 执行流程**：
+**Hook execution flow**:
 
 ```typescript
-// 1. 从配置中获取匹配的 hooks
-// 2. 按优先级排序
-// 3. 顺序执行，支持提前终止
-// 4. 每个 hook 可以返回:
-//    - continue: false  → 终止后续 hooks
-//    - decision: 'block' → 拒绝工具调用
-//    - updatedInput      → 修改工具输入参数
+// 1. Retrieve matching hooks from config
+// 2. Sort by priority
+// 3. Execute in order, supports early termination
+// 4. Each hook can return:
+//    - continue: false  → stop subsequent hooks
+//    - decision: 'block' → reject the tool call
+//    - updatedInput      → modify the tool's input parameters
 ```
 
 ---
 
-### 权限系统
+### Permission System
 
-权限系统控制工具能否被自动执行或需要用户确认。
+The permission system controls whether tools can be executed automatically or require user confirmation.
 
-**权限模式**：
+**Permission modes**:
 
-| 模式 | 说明 |
-|------|------|
-| `default` | 敏感操作提示用户确认 |
-| `bypassPermissions` | 自动批准所有操作（危险模式）|
-| `dontAsk` | 本次会话内不再重复询问 |
-| `acceptEdits` | 仅自动批准非破坏性操作 |
-| `plan` | 先展示操作计划，等待用户确认 |
-| `auto` | 使用 TRANSCRIPT_CLASSIFIER 自动决策 |
+| Mode | Description |
+|------|-------------|
+| `default` | Prompt user for confirmation on sensitive operations |
+| `bypassPermissions` | Auto-approve all operations (dangerous mode) |
+| `dontAsk` | Do not ask again within the current session |
+| `acceptEdits` | Auto-approve only non-destructive operations |
+| `plan` | Show action plan first, wait for user confirmation |
+| `auto` | Automatic decision via TRANSCRIPT_CLASSIFIER |
 
-**权限检查流程**：
+**Permission check flow**:
 
 ```
-工具调用请求
+Tool call request
   ↓
-1. 查找匹配的权限规则 (allow/deny)
+1. Find matching permission rules (allow/deny)
   ↓
-2. 执行 PreToolUse hooks
+2. Execute PreToolUse hooks
   ↓
-3. 按权限模式判断
-  ├── bypassPermissions/dontAsk → 直接批准
-  ├── acceptEdits → 检查是否为破坏性操作
-  ├── plan → 展示计划等待确认
-  └── default → 提示用户
+3. Evaluate by permission mode
+  ├── bypassPermissions/dontAsk → approve directly
+  ├── acceptEdits → check whether operation is destructive
+  ├── plan → show plan and wait for confirmation
+  └── default → prompt user
   ↓
-4. 返回 PermissionResult { approved, reason }
+4. Return PermissionResult { approved, reason }
 ```
 
 ---
 
-### 任务系统
+### Task System
 
-任务系统支持在后台并发执行多种类型的任务。
+The task system supports concurrent execution of multiple task types in the background.
 
-**任务类型**：
+**Task types**:
 
-| 类型 | 说明 |
-|------|------|
-| `local_bash` | 本地 Bash 命令任务 |
-| `local_agent` | 本地 Agent 代理任务 |
-| `remote_agent` | 远程 Agent 任务 |
-| `in_process_teammate` | 进程内队友任务（多代理协作）|
-| `local_workflow` | 本地工作流任务 |
-| `monitor_mcp` | MCP 监控任务 |
+| Type | Description |
+|------|-------------|
+| `local_bash` | Local Bash command task |
+| `local_agent` | Local agent task |
+| `remote_agent` | Remote agent task |
+| `in_process_teammate` | In-process teammate task (multi-agent collaboration) |
+| `local_workflow` | Local workflow task |
+| `monitor_mcp` | MCP monitoring task |
 
-**任务状态**：`pending` → `running` → `completed` / `failed` / `killed`
-
----
-
-### MCP 集成
-
-Claude Code 深度集成 [Model Context Protocol (MCP)](https://modelcontextprotocol.io)，允许连接外部服务（数据库、浏览器、Slack 等）。
-
-**服务实现**：`src/services/mcp/client.ts` (3,348 行)
-
-功能包括：
-- MCP 服务器连接管理（stdio / SSE / HTTP）
-- 工具和资源动态发现
-- OAuth 认证支持
-- 结构化内容（图片、文件）支持
-- MCP 服务器权限审批流程
+**Task states**: `pending` → `running` → `completed` / `failed` / `killed`
 
 ---
 
-## 技术栈
+### MCP Integration
 
-| 技术 | 版本/说明 |
-|------|-----------|
-| **运行时** | Bun |
-| **语言** | TypeScript（严格模式）|
-| **终端 UI** | React + [Ink](https://github.com/vadimdemedes/ink) |
-| **状态管理** | Zustand |
-| **Schema 验证** | Zod v4 |
+Claude Code deeply integrates [Model Context Protocol (MCP)](https://modelcontextprotocol.io), enabling connections to external services (databases, browsers, Slack, etc.).
+
+**Service implementation**: `src/services/mcp/client.ts` (3,348 lines)
+
+Features include:
+- MCP server connection management (stdio / SSE / HTTP)
+- Dynamic tool and resource discovery
+- OAuth authentication support
+- Structured content (images, files) support
+- MCP server permission approval flow
+
+---
+
+## Tech Stack
+
+| Technology | Version / Notes |
+|------------|----------------|
+| **Runtime** | Bun |
+| **Language** | TypeScript (strict mode) |
+| **Terminal UI** | React + [Ink](https://github.com/vadimdemedes/ink) |
+| **State management** | Zustand |
+| **Schema validation** | Zod v4 |
 | **AI SDK** | @anthropic-ai/sdk |
 | **MCP SDK** | @modelcontextprotocol/sdk |
-| **CLI 解析** | Commander.js |
-| **文件搜索** | ripgrep |
-| **工具库** | lodash-es |
-| **特性标志** | bun:bundle（编译时消除）|
+| **CLI parsing** | Commander.js |
+| **File search** | ripgrep |
+| **Utility library** | lodash-es |
+| **Feature flags** | bun:bundle (compile-time elimination) |
 
 ---
 
-## 特性标志系统
+## Feature Flag System
 
-使用 Bun 的 `bun:bundle` 进行**编译时死代码消除**，未激活的特性代码完全不会出现在产物中：
+Uses Bun's `bun:bundle` for **compile-time dead code elimination** — inactive feature code never appears in the output bundle:
 
 ```typescript
 import { feature } from 'bun:bundle'
 
-// 编译时决定是否包含此代码
+// Decide at compile time whether to include this code
 const proactiveTool = feature('PROACTIVE') ? SleepTool : null
 const voiceMode = feature('VOICE_MODE') ? VoiceModule : null
 ```
 
-**主要特性标志**：
+**Key feature flags**:
 
-| 标志 | 功能 |
-|------|------|
-| `KAIROS` | 高级助手模式（智能简报等）|
-| `COORDINATOR_MODE` | 多代理协调模式 |
-| `VOICE_MODE` | 语音输入支持 |
-| `BRIDGE_MODE` | 远程执行桥接 |
-| `PROACTIVE` | 主动任务模式 |
-| `TRANSCRIPT_CLASSIFIER` | 自动权限分类器 |
-| `BASH_CLASSIFIER` | Bash 命令分类器 |
-| `TEAMMEM` | 团队记忆同步 |
-| `BUDDY` | 伴随精灵 UI |
-| `CONTEXT_COLLAPSE` | 上下文折叠优化 |
-| `HISTORY_SNIP` | 历史记录裁剪 |
-| `MONITOR_TOOL` | MCP 监控工具 |
-| `BG_SESSIONS` | 后台会话支持 |
+| Flag | Feature |
+|------|---------|
+| `KAIROS` | Advanced assistant mode (smart briefings, etc.) |
+| `COORDINATOR_MODE` | Multi-agent coordination mode |
+| `VOICE_MODE` | Voice input support |
+| `BRIDGE_MODE` | Remote execution bridge |
+| `PROACTIVE` | Proactive task mode |
+| `TRANSCRIPT_CLASSIFIER` | Automatic permission classifier |
+| `BASH_CLASSIFIER` | Bash command classifier |
+| `TEAMMEM` | Team memory sync |
+| `BUDDY` | Companion sprite UI |
+| `CONTEXT_COLLAPSE` | Context collapse optimization |
+| `HISTORY_SNIP` | History trimming |
+| `MONITOR_TOOL` | MCP monitoring tool |
+| `BG_SESSIONS` | Background session support |
 
 ---
 
-## 关键数据流
+## Key Data Flows
 
-### 消息类型体系
+### Message Type Hierarchy
 
 ```typescript
 type Message =
-  | UserMessage          // 用户输入
-  | AssistantMessage     // Claude 响应（含工具调用）
-  | ProgressMessage      // 工具执行进度
-  | SystemMessage        // 系统消息
-  | AttachmentMessage    // 附件消息
-  | ToolUseSummaryMessage // 工具使用摘要
-  | TombstoneMessage     // 已删除消息的占位符
+  | UserMessage          // User input
+  | AssistantMessage     // Claude response (including tool calls)
+  | ProgressMessage      // Tool execution progress
+  | SystemMessage        // System message
+  | AttachmentMessage    // Attachment message
+  | ToolUseSummaryMessage // Tool use summary
+  | TombstoneMessage     // Placeholder for deleted messages
 ```
 
-### AppState 核心字段
+### AppState Core Fields
 
 ```typescript
 type AppState = {
-  messages: Message[]          // 完整消息历史
-  sessionId: UUID              // 会话 ID
-  toolPermissionContext: ...   // 权限上下文
+  messages: Message[]          // Full message history
+  sessionId: UUID              // Session ID
+  toolPermissionContext: ...   // Permission context
   backgroundTasks: Map<string, BackgroundTask>
   inProgressToolUseIDs: Set<string>
-  usage: NonNullableUsage      // Token 使用统计
-  fileHistoryState: ...        // 文件编辑历史
+  usage: NonNullableUsage      // Token usage stats
+  fileHistoryState: ...        // File edit history
 }
 ```
 
-### 成本追踪
+### Cost Tracking
 
-`src/cost-tracker.ts` 追踪每次 API 调用的 Token 用量和费用，支持：
-- 按 session 统计
-- 输入/输出/缓存 token 分类
-- 实时费用显示
-
----
-
-## 主要模块说明
-
-| 文件/目录 | 规模 | 核心职责 |
-|-----------|------|----------|
-| `main.tsx` | 4,683 行 | 应用主循环、CLI 初始化、消息分发 |
-| `screens/REPL.tsx` | 5,005 行 | 交互式 REPL 界面全部实现 |
-| `utils/messages.ts` | 5,512 行 | 消息处理工具函数库 |
-| `utils/sessionStorage.ts` | 5,105 行 | 会话持久化存储 |
-| `utils/hooks.ts` | 5,022 行 | Hook 执行引擎 |
-| `cli/print.ts` | 5,594 行 | 输出格式化渲染 |
-| `query.ts` | 1,729 行 | LLM 查询处理 |
-| `QueryEngine.ts` | 1,295 行 | 查询引擎核心 |
-| `services/api/claude.ts` | 3,419 行 | Anthropic API 客户端 |
-| `services/mcp/client.ts` | 3,348 行 | MCP 协议客户端 |
-| `utils/bash/bashParser.ts` | 4,436 行 | Bash 命令解析器 |
-| `utils/attachments.ts` | 3,997 行 | 附件处理 |
+`src/cost-tracker.ts` tracks token usage and cost for each API call, supporting:
+- Per-session aggregation
+- Input / output / cache token breakdown
+- Real-time cost display
 
 ---
 
-## 环境变量参考
+## Module Reference
 
-| 变量 | 说明 |
-|------|------|
+| File / Directory | Size | Core responsibility |
+|-----------------|------|---------------------|
+| `main.tsx` | 4,683 lines | App main loop, CLI init, message dispatch |
+| `screens/REPL.tsx` | 5,005 lines | Full interactive REPL UI implementation |
+| `utils/messages.ts` | 5,512 lines | Message processing utilities |
+| `utils/sessionStorage.ts` | 5,105 lines | Session persistence storage |
+| `utils/hooks.ts` | 5,022 lines | Hook execution engine |
+| `cli/print.ts` | 5,594 lines | Output formatting and rendering |
+| `query.ts` | 1,729 lines | LLM query processing |
+| `QueryEngine.ts` | 1,295 lines | Query engine core |
+| `services/api/claude.ts` | 3,419 lines | Anthropic API client |
+| `services/mcp/client.ts` | 3,348 lines | MCP protocol client |
+| `utils/bash/bashParser.ts` | 4,436 lines | Bash command parser |
+| `utils/attachments.ts` | 3,997 lines | Attachment processing |
+
+---
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
 | `NODE_ENV` | `development` / `test` / `production` |
-| `CLAUDE_CODE_REMOTE` | `true` — 启用远程执行模式 |
-| `CLAUDE_CODE_DISABLE_THINKING` | 禁用扩展思考 |
-| `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | 禁用自动内存 |
-| `DISABLE_BACKGROUND_TASKS` | 禁用后台任务 |
-| `DISABLE_INTERLEAVED_THINKING` | 禁用交错思考 |
-| `USER_TYPE` | `ant` — 启用内部专属工具（如 REPLTool）|
-| `CLAUDE_CODE_MESSAGING_SOCKET` | 消息通信 socket 路径 |
-| `NODE_OPTIONS` | Node.js 堆大小配置 |
+| `CLAUDE_CODE_REMOTE` | `true` — enable remote execution mode |
+| `CLAUDE_CODE_DISABLE_THINKING` | Disable extended thinking |
+| `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | Disable automatic memory |
+| `DISABLE_BACKGROUND_TASKS` | Disable background tasks |
+| `DISABLE_INTERLEAVED_THINKING` | Disable interleaved thinking |
+| `USER_TYPE` | `ant` — enable internal-only tools (e.g. REPLTool) |
+| `CLAUDE_CODE_MESSAGING_SOCKET` | Message communication socket path |
+| `NODE_OPTIONS` | Node.js heap size configuration |
 
 ---
 
-## 代码规模统计
+## Codebase Statistics
 
-| 维度 | 数量 |
-|------|------|
-| 总文件数 | 1,903 |
-| TypeScript 文件 | 1,884 |
-| 总代码行数 | ~512,000 |
-| CLI 命令 | 103+ |
-| 工具 | 44+ |
-| 服务 | 38+ |
-| React 组件 | 146+ |
-| React Hooks | 87+ |
-| 工具函数模块 | 298+ |
-| 任务类型 | 6 |
-| Hook 事件 | 12+ |
+| Dimension | Count |
+|-----------|-------|
+| Total files | 1,903 |
+| TypeScript files | 1,884 |
+| Total lines of code | ~512,000 |
+| CLI commands | 103+ |
+| Tools | 44+ |
+| Services | 38+ |
+| React components | 146+ |
+| React hooks | 87+ |
+| Utility modules | 298+ |
+| Task types | 6 |
+| Hook events | 12+ |
