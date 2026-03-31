@@ -13,7 +13,7 @@ Claude Code 是一款运行在终端中的 AI 编程助手，深度集成 Claude
 
 <br/>
 
-<img src="docs/cli-startup.jpg" alt="Claude Code 运行截图：bun install + bun run dev 成功启动" width="720"/>
+<img src="assets/cli-preview.jpg" alt="Claude Code 运行截图：bun install + bun run dev 成功启动" width="720"/>
 
 *执行 `bun install` 后，`bun run dev` 直接从源码启动 Claude Code，进入交互式 REPL*
 

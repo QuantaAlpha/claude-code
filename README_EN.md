@@ -13,7 +13,7 @@ Claude Code is a terminal-based AI coding assistant deeply integrated with Claud
 
 <br/>
 
-<img src="docs/cli-startup.jpg" alt="Claude Code running: bun install + bun run dev starts successfully" width="720"/>
+<img src="assets/cli-preview.jpg" alt="Claude Code running: bun install + bun run dev starts successfully" width="720"/>
 
 *After `bun install`, `bun run dev` launches Claude Code directly from source into the interactive REPL*
 
